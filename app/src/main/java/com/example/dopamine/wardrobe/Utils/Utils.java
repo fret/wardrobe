@@ -114,7 +114,7 @@ public class Utils {
             e.printStackTrace();
         } finally {
         }
-        return directory.getAbsolutePath();
+        return directory.getAbsolutePath()+"/"+imageName;
     }
 
     public static String saveToInternalSorageBottom(Context context, Bottom bottom){
@@ -134,7 +134,7 @@ public class Utils {
             e.printStackTrace();
         } finally {
         }
-        return directory.getAbsolutePath();
+        return directory.getAbsolutePath()+"/"+imageName;
     }
 
     public static Bitmap loadImageFromStorage(String path, String imageName)

@@ -2,15 +2,21 @@ package com.example.dopamine.wardrobe.Database;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
 
 import com.example.dopamine.wardrobe.Models.Bottom;
 import com.example.dopamine.wardrobe.Models.Top;
 import com.example.dopamine.wardrobe.R;
 import com.example.dopamine.wardrobe.Utils.Utils;
+
+import java.io.File;
+import java.io.FileOutputStream;
 
 /**
  * Created by Dopamine on 12/30/2015.
@@ -56,24 +62,30 @@ public class AppDB extends SQLiteOpenHelper {
         db.execSQL(CREATE_BOTTOM_TABLE);
         db.execSQL(CREATE_FAV_TABLE);
 
-        /*
+
         ContentValues values = new ContentValues();
-        values.put(TOP_COLUMN_IMAGE_PATH, Utils.bitmapToByteArray(Utils.decodeSampledBitmapFromResource(mContext.getResources(), R.drawable.cba, 100, 100)));
+        values.put(TOP_COLUMN_IMAGE_PATH, saveToInternalSorage(mContext, R.drawable.a, "a.jpg"));
         db.insert(TOP_TABLE_NAME, null, values);
 
         values = new ContentValues();
-        values.put(TOP_COLUMN_IMAGE, Utils.bitmapToByteArray(Utils.decodeSampledBitmapFromResource(mContext.getResources(), R.drawable.cba, 100, 100)));
+        values.put(TOP_COLUMN_IMAGE_PATH, saveToInternalSorage(mContext, R.drawable.b, "b.jpg"));
         db.insert(TOP_TABLE_NAME, null, values);
 
+        values = new ContentValues();
+        values.put(TOP_COLUMN_IMAGE_PATH, saveToInternalSorage(mContext, R.drawable.c, "c.jpg"));
+        db.insert(TOP_TABLE_NAME, null, values);
 
-        ContentValues values = new ContentValues();
-        values.put(BOTTOM_COLUMN_IMAGE, Utils.bitmapToByteArray(Utils.decodeSampledBitmapFromResource(mContext.getResources(), R.drawable.cba, 100, 100)));
+        values = new ContentValues();
+        values.put(BOTTOM_COLUMN_IMAGE_PATH, saveToInternalSorage(mContext, R.drawable.d, "d.jpg"));
         db.insert(BOTTOM_TABLE_NAME, null, values);
 
         values = new ContentValues();
-        values.put(BOTTOM_COLUMN_IMAGE, Utils.bitmapToByteArray(Utils.decodeSampledBitmapFromResource(mContext.getResources(), R.drawable.cba, 100, 100)));
+        values.put(BOTTOM_COLUMN_IMAGE_PATH, saveToInternalSorage(mContext, R.drawable.e, "e.jpg"));
         db.insert(BOTTOM_TABLE_NAME, null, values);
-        */
+
+        values = new ContentValues();
+        values.put(BOTTOM_COLUMN_IMAGE_PATH, saveToInternalSorage(mContext, R.drawable.f, "f.jpg"));
+        db.insert(BOTTOM_TABLE_NAME, null, values);
     }
 
     @Override
@@ -109,7 +121,7 @@ public class AppDB extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         String path = Utils.saveToInternalSorageTop(mContext, top);
         ContentValues values = new ContentValues();
-        values.put(TOP_COLUMN_IMAGE_PATH, top.getPath());
+        values.put(TOP_COLUMN_IMAGE_PATH, path);
 
 // Insert the new row, returning the primary key value of the new row
         long newRowId;
@@ -143,7 +155,7 @@ public class AppDB extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         String path = Utils.saveToInternalSorageBottom(mContext, bottom);
         ContentValues values = new ContentValues();
-        values.put(BOTTOM_COLUMN_IMAGE_PATH, bottom.getPath());
+        values.put(BOTTOM_COLUMN_IMAGE_PATH, path);
 
 // Insert the new row, returning the primary key value of the new row
         long newRowId;
@@ -193,5 +205,24 @@ public class AppDB extends SQLiteOpenHelper {
         newRowId = db.insert(FAV_TABLE_NAME, null, values);
         db.close();
         return newRowId;
+    }
+
+    private String saveToInternalSorage(Context context, int res, String name){
+        ContextWrapper cw = new ContextWrapper(context);
+        // path to /data/data/yourapp/app_data/imageDir
+        File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
+        // Create imageDir
+        File file=new File(directory, name);
+
+        try {
+            FileOutputStream outStream = new FileOutputStream(file);
+            BitmapFactory.decodeResource(mContext.getResources(), res).compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+            outStream.flush();
+            outStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+        }
+        return directory.getAbsolutePath()+"/"+name;
     }
 }

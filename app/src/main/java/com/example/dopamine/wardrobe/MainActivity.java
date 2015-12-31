@@ -1,6 +1,8 @@
 package com.example.dopamine.wardrobe;
 
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -25,14 +27,18 @@ import android.widget.Toast;
 import com.cocosw.bottomsheet.BottomSheet;
 import com.example.dopamine.wardrobe.Adapters.BottomViewPagerAdapter;
 import com.example.dopamine.wardrobe.Adapters.TopViewPagerAdapter;
+import com.example.dopamine.wardrobe.BroadcastReceiver.AlarmReceiver;
 import com.example.dopamine.wardrobe.Database.AppDB;
 import com.example.dopamine.wardrobe.Models.Bottom;
+import com.example.dopamine.wardrobe.Models.Combination;
+import com.example.dopamine.wardrobe.Models.Shuffle;
 import com.example.dopamine.wardrobe.Models.Top;
 import com.example.dopamine.wardrobe.Utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
@@ -51,6 +57,8 @@ public class MainActivity extends AppCompatActivity {
     private int reqLength;
     private int mCurrentTop;
     private int mCurrentBottom;
+    private Shuffle shuffle;
+    private PendingIntent pendingIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +68,8 @@ public class MainActivity extends AppCompatActivity {
         appDB=new AppDB(this);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        shuffle=new Shuffle(this);
 
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
@@ -83,6 +93,25 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.bottomAddButton).setOnClickListener(bottomAddButtonListener);
         findViewById(R.id.favouriteButton).setOnClickListener(favouriteButtonListener);
         findViewById(R.id.shuffleButton).setOnClickListener(shuffleButtonListener);
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        Intent alarmIntent = new Intent(this, AlarmReceiver.class); // AlarmReceiver1 = broadcast receiver
+
+        pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        alarmIntent.setData((Uri.parse("custom://"+System.currentTimeMillis())));
+        alarmManager.cancel(pendingIntent);
+
+        Calendar alarmStartTime = Calendar.getInstance();
+        Calendar now = Calendar.getInstance();
+        alarmStartTime.set(Calendar.HOUR_OF_DAY, 6);
+        alarmStartTime.set(Calendar.MINUTE, 0);
+        alarmStartTime.set(Calendar.SECOND, 0);
+        if (now.after(alarmStartTime)) {
+            alarmStartTime.add(Calendar.DATE, 1);
+        }
+
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, alarmStartTime.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+
     }
 
     @Override
@@ -162,8 +191,9 @@ public class MainActivity extends AppCompatActivity {
     View.OnClickListener shuffleButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            ((ViewPager)findViewById(R.id.topViewPager)).setCurrentItem(1);
-            ((ViewPager)findViewById(R.id.bottomViewPager)).setCurrentItem(0);
+            Combination c=shuffle.getCombination();
+            ((ViewPager) findViewById(R.id.topViewPager)).setCurrentItem(c.getTop_pos());
+            ((ViewPager)findViewById(R.id.bottomViewPager)).setCurrentItem(c.getBottom_pos());
         }
     };
 
@@ -265,11 +295,13 @@ public class MainActivity extends AppCompatActivity {
             //Bitmap bitmap = Utils.decodeSampledBitmapFromFile(mCurrentPhotoPath, (findViewById(R.id.topViewPager)).getMeasuredWidth(), (findViewById(R.id.topViewPager)).getMeasuredHeight());
             appDB.addTop(new Top(mCurrentPhotoPath));
             topViewPagerAdapter.notifyDataSetChanged();
+            shuffle.refresh();
         }
         if (requestCode == REQUEST_TAKE_TOP_PHOTO && resultCode == RESULT_OK) {
             appDB.addTop(new Top(mCurrentPhotoPath));
             //appDB.addTop(new Top(mCurrentPhotoPath, mCurrentFileName));
             topViewPagerAdapter.notifyDataSetChanged();
+            shuffle.refresh();
         }
         if (requestCode == RESULT_LOAD_IMG_BOTTOM && resultCode == RESULT_OK && data != null) {
 
@@ -287,10 +319,12 @@ public class MainActivity extends AppCompatActivity {
             cursor.close();
             appDB.addBottom(new Bottom(mCurrentPhotoPath));
             bottomViewPagerAdapter.notifyDataSetChanged();
+            shuffle.refresh();
         }
         if (requestCode == REQUEST_TAKE_BOTTOM_PHOTO && resultCode == RESULT_OK) {
             appDB.addBottom(new Bottom(mCurrentPhotoPath));
             bottomViewPagerAdapter.notifyDataSetChanged();
+            shuffle.refresh();
         }
 
     }

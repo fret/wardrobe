@@ -50,7 +50,8 @@
         android:layout_marginRight="8dp"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
-        fab:fab_colorNormal="@color/colorPrimary"/>
+        fab:fab_colorNormal="@color/colorPrimary"
+        app:fab_icon="@drawable/ic_add_white_24dp"/>
     <com.getbase.floatingactionbutton.FloatingActionButton
         android:id="@+id/topAddButton"
         android:layout_width="wrap_content"
@@ -59,14 +60,16 @@
         android:layout_marginLeft="8dp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        fab:fab_colorNormal="@color/colorPrimary"/>
+        fab:fab_colorNormal="@color/colorPrimary"
+        app:fab_icon="@drawable/ic_add_white_24dp"/>
     <com.getbase.floatingactionbutton.FloatingActionButton
         android:id="@+id/shuffleButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        fab:fab_colorNormal="@color/colorPrimary"/>
+        fab:fab_colorNormal="@color/colorPrimary"
+        app:fab_icon="@drawable/ic_autorenew_white_24dp"/>
     <com.getbase.floatingactionbutton.FloatingActionButton
         android:id="@+id/favouriteButton"
         android:layout_width="wrap_content"
@@ -74,5 +77,6 @@
         android:layout_marginBottom="8dp"
         android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"
-        fab:fab_colorNormal="@color/colorPrimary"/>
+        fab:fab_colorNormal="@color/colorPrimary"
+        app:fab_icon="@drawable/ic_favorite_white_24dp"/>
 </RelativeLayout>

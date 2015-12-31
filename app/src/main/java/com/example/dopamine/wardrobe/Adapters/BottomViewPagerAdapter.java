@@ -2,6 +2,7 @@ package com.example.dopamine.wardrobe.Adapters;
 
 import android.content.Context;
 import android.content.res.Configuration;
+import android.graphics.BitmapFactory;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
@@ -10,7 +11,9 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import com.example.dopamine.wardrobe.AsyncTask.BitmapWorkerTask;
 import com.example.dopamine.wardrobe.Database.AppDB;
+import com.example.dopamine.wardrobe.R;
 import com.example.dopamine.wardrobe.Utils.Utils;
 
 /**
@@ -46,6 +49,7 @@ public class BottomViewPagerAdapter extends PagerAdapter {
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
         imageView.setLayoutParams(layoutParams);
         imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        imageView.setImageBitmap(BitmapFactory.decodeResource(mContext.getResources(), R.drawable.placeholde));
         int reqWidth=0,reqHeight=0;
         if(mContext.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
             reqHeight=height/2;
@@ -55,9 +59,14 @@ public class BottomViewPagerAdapter extends PagerAdapter {
             reqHeight=height;
             reqWidth=width/2;
         }
-        imageView.setImageBitmap(Utils.decodeSampledBitmapFromFile(appDB.getBottom(position).getPath(), reqWidth, reqHeight));
+        loadBitmap(appDB.getBottom(position).getPath(), imageView, reqWidth, reqHeight);
         container.addView(imageView);
         return imageView;
+    }
+
+    public void loadBitmap(String path, ImageView imageView, int width, int height) {
+        BitmapWorkerTask task = new BitmapWorkerTask(imageView, width, height);
+        task.execute(path);
     }
 
     @Override

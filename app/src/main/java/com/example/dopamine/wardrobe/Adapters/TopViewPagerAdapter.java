@@ -6,6 +6,7 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -20,6 +21,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.example.dopamine.wardrobe.AsyncTask.BitmapWorkerTask;
 import com.example.dopamine.wardrobe.Database.AppDB;
 import com.example.dopamine.wardrobe.Models.Top;
 import com.example.dopamine.wardrobe.R;
@@ -57,6 +59,7 @@ public class TopViewPagerAdapter extends PagerAdapter {
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
         imageView.setLayoutParams(layoutParams);
         imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        imageView.setImageBitmap(BitmapFactory.decodeResource(mContext.getResources(), R.drawable.placeholde));
         int reqWidth=0,reqHeight=0;
         if(mContext.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
             reqHeight=height/2;
@@ -66,13 +69,19 @@ public class TopViewPagerAdapter extends PagerAdapter {
             reqHeight=height;
             reqWidth=width/2;
         }
-        imageView.setImageBitmap(Utils.decodeSampledBitmapFromFile(appDB.getTop(position).getPath(), reqWidth, reqHeight));
+        loadBitmap(appDB.getTop(position).getPath(), imageView, reqWidth, reqHeight);
         container.addView(imageView);
         return imageView;
     }
 
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
-        container.removeView((ImageView)object);
+        container.removeView((ImageView) object);
     }
+
+    public void loadBitmap(String path, ImageView imageView, int width, int height) {
+        BitmapWorkerTask task = new BitmapWorkerTask(imageView, width, height);
+        task.execute(path);
+    }
+
 }

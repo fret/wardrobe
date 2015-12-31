@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.dopamine.wardrobe" >
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- permission required to use Alarm Manager -->
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -28,6 +31,8 @@
             android:label="@string/title_activity_bottom"
             android:theme="@style/AppTheme.NoActionBar" >
         </activity>
+        <receiver android:name="com.example.dopamine.wardrobe.BroadcastReceiver.AlarmReceiver"  android:enabled="true"/>
+        <service android:name=".Services.MyAlarmService" android:enabled="true"/>
     </application>
 
 </manifest>
