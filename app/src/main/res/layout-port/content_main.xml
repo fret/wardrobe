@@ -67,4 +67,13 @@
         android:layout_centerVertical="true"
         fab:fab_colorNormal="@color/colorPrimary"
         app:fab_icon="@drawable/ic_autorenew_white_24dp"/>
+    <com.getbase.floatingactionbutton.FloatingActionButton
+        android:id="@+id/historyButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        fab:fab_colorNormal="@color/colorPrimary"
+        app:fab_icon="@drawable/ic_favorite_white_24dp"/>
 </RelativeLayout>

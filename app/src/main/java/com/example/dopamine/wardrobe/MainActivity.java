@@ -2,6 +2,7 @@ package com.example.dopamine.wardrobe;
 
 import android.app.Activity;
 import android.app.AlarmManager;
+import android.app.FragmentManager;
 import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -14,7 +15,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -22,6 +25,9 @@ import android.view.Display;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import com.cocosw.bottomsheet.BottomSheet;
@@ -29,6 +35,8 @@ import com.example.dopamine.wardrobe.Adapters.BottomViewPagerAdapter;
 import com.example.dopamine.wardrobe.Adapters.TopViewPagerAdapter;
 import com.example.dopamine.wardrobe.BroadcastReceiver.AlarmReceiver;
 import com.example.dopamine.wardrobe.Database.AppDB;
+import com.example.dopamine.wardrobe.Fragments.DrawerFavFragment;
+import com.example.dopamine.wardrobe.Fragments.DrawerHistoryFragment;
 import com.example.dopamine.wardrobe.Models.Bottom;
 import com.example.dopamine.wardrobe.Models.Combination;
 import com.example.dopamine.wardrobe.Models.Shuffle;
@@ -59,6 +67,10 @@ public class MainActivity extends AppCompatActivity {
     private int mCurrentBottom;
     private Shuffle shuffle;
     private PendingIntent pendingIntent;
+    private String[] mPlanetTitles;
+    private DrawerLayout mDrawerLayout;
+    private ListView mDrawerList;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.bottomAddButton).setOnClickListener(bottomAddButtonListener);
         findViewById(R.id.favouriteButton).setOnClickListener(favouriteButtonListener);
         findViewById(R.id.shuffleButton).setOnClickListener(shuffleButtonListener);
+        findViewById(R.id.historyButton).setOnClickListener(historyButtonListener);
 
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
         Intent alarmIntent = new Intent(this, AlarmReceiver.class); // AlarmReceiver1 = broadcast receiver
@@ -112,7 +125,70 @@ public class MainActivity extends AppCompatActivity {
 
         alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, alarmStartTime.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
 
+        mPlanetTitles = getResources().getStringArray(R.array.drawer_array);
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerList = (ListView) findViewById(R.id.left_drawer);
+
+        // Set the adapter for the list view
+        mDrawerList.setAdapter(new ArrayAdapter<String>(this,
+                R.layout.drawer_list_item, mPlanetTitles));
+        // Set the list's click listener
+        mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+        /*
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
+        */
+
     }
+
+    private class DrawerItemClickListener implements ListView.OnItemClickListener {
+        @Override
+        public void onItemClick(AdapterView parent, View view, int position, long id) {
+            selectItem(position);
+            Toast.makeText(getBaseContext(), "Position is" + Integer.toString(position), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    /** Swaps fragments in the main content view */
+    private void selectItem(int position) {
+        // Create a new fragment and specify the planet to show based on position
+        android.app.Fragment fragment=null;
+        switch (position){
+            case 0: fragment=new DrawerHistoryFragment();
+                break;
+            case 1: fragment=new DrawerFavFragment();
+                break;
+        }
+        /*
+        Bundle args = new Bundle();
+        args.putInt(PlanetFragment.ARG_PLANET_NUMBER, position);
+        fragment.setArguments(args);
+        */
+
+        // Insert the fragment by replacing any existing fragment
+        findViewById(R.id.mainLinearLayout).setVisibility(View.GONE);
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.content_frame, fragment)
+                .commit();
+
+        // Highlight the selected item, update the title, and close the drawer
+        /*
+        mDrawerList.setItemChecked(position, true);
+        setTitle(mPlanetTitles[position]);
+        */
+        mDrawerLayout.closeDrawer(mDrawerList);
+    }
+
+
+    /*
+    @Override
+    public void setTitle(CharSequence title) {
+        mTitle = title;
+        getActionBar().setTitle(mTitle);
+    }
+    */
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -178,6 +254,20 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
             long res = appDB.addFav(mCurrentTop, mCurrentBottom);
+            Log.v("long_res", Long.toString(res));
+            if(res > 0 ){
+                Toast.makeText(getBaseContext(), "Added successfully", Toast.LENGTH_SHORT).show();
+            }
+            else if (res == 0) {
+                Toast.makeText(getBaseContext(), "Already added", Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
+
+    View.OnClickListener historyButtonListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            long res = appDB.addHistory(mCurrentTop, mCurrentBottom);
             Log.v("long_res", Long.toString(res));
             if(res > 0 ){
                 Toast.makeText(getBaseContext(), "Added successfully", Toast.LENGTH_SHORT).show();

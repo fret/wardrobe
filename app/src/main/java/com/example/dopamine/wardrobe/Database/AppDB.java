@@ -11,6 +11,7 @@ import android.graphics.BitmapFactory;
 import android.util.Log;
 
 import com.example.dopamine.wardrobe.Models.Bottom;
+import com.example.dopamine.wardrobe.Models.FavComb;
 import com.example.dopamine.wardrobe.Models.Top;
 import com.example.dopamine.wardrobe.R;
 import com.example.dopamine.wardrobe.Utils.Utils;
@@ -34,6 +35,11 @@ public class AppDB extends SQLiteOpenHelper {
     public static final String FAV_COLUMN_ID = "id";
     public static final String FAV_COLUMN_TOP_ID = "top_id";
     public static final String FAV_COLUMN_BOTTOM_ID = "bottom_id";
+    public static final String HISTORY_TABLE_NAME = "history";
+    public static final String HISTORY_COLUMN_ID = "id";
+    public static final String HISTORY_COLUMN_TOP_ID = "top_id";
+    public static final String HISTORY_COLUMN_BOTTOM_ID = "bottom_id";
+    public static final String HISTORY_COLUMN_TIMESTAMP = "timestamp";
     private static final String CREATE_TOP_TABLE = "create table "
             + TOP_TABLE_NAME + " (" + TOP_COLUMN_ID
             + " integer primary key , " + TOP_COLUMN_IMAGE_PATH
@@ -46,6 +52,13 @@ public class AppDB extends SQLiteOpenHelper {
             + FAV_TABLE_NAME + " (" + FAV_COLUMN_ID
             + " integer primary key , " + FAV_COLUMN_TOP_ID
             + " integer not null , " + FAV_COLUMN_BOTTOM_ID + " integer not null , "+
+            "FOREIGN KEY(" + FAV_COLUMN_TOP_ID +") REFERENCES " +  TOP_TABLE_NAME + "(" + TOP_COLUMN_ID + ")," +
+            "FOREIGN KEY(" + FAV_COLUMN_BOTTOM_ID +") REFERENCES " +  BOTTOM_TABLE_NAME + "(" + BOTTOM_COLUMN_ID + "));";
+    private static final String CREATE_HISTORY_TABLE = "create table "
+            + HISTORY_TABLE_NAME + " (" + HISTORY_COLUMN_ID
+            + " integer primary key , " + HISTORY_COLUMN_TOP_ID
+            + " integer not null , " + HISTORY_COLUMN_BOTTOM_ID + " integer not null , "+
+            HISTORY_COLUMN_TIMESTAMP + " DATETIME DEFAULT CURRENT_TIMESTAMP ," +
             "FOREIGN KEY(" + FAV_COLUMN_TOP_ID +") REFERENCES " +  TOP_TABLE_NAME + "(" + TOP_COLUMN_ID + ")," +
             "FOREIGN KEY(" + FAV_COLUMN_BOTTOM_ID +") REFERENCES " +  BOTTOM_TABLE_NAME + "(" + BOTTOM_COLUMN_ID + "));";
     Context mContext;
@@ -61,6 +74,7 @@ public class AppDB extends SQLiteOpenHelper {
         db.execSQL(CREATE_TOP_TABLE);
         db.execSQL(CREATE_BOTTOM_TABLE);
         db.execSQL(CREATE_FAV_TABLE);
+        db.execSQL(CREATE_HISTORY_TABLE);
 
 
         ContentValues values = new ContentValues();
@@ -93,6 +107,7 @@ public class AppDB extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TOP_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + BOTTOM_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + FAV_TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + HISTORY_TABLE_NAME);
         onCreate(db);
     }
 
@@ -143,6 +158,69 @@ public class AppDB extends SQLiteOpenHelper {
         }
     }
 
+    public FavComb getFav(int position){
+        SQLiteDatabase db = this.getReadableDatabase();
+        Top t=null;
+        Bottom b=null;
+        Cursor c = db.rawQuery("SELECT " + FAV_COLUMN_TOP_ID + "," + FAV_COLUMN_BOTTOM_ID + " FROM " + FAV_TABLE_NAME + " ORDER BY " + FAV_COLUMN_ID + " LIMIT " + Integer.toString(position) + ",1;", null);
+        if( c != null && c.moveToFirst() ) {
+            Cursor d = db.rawQuery("SELECT " + TOP_COLUMN_ID + "," + TOP_COLUMN_IMAGE_PATH + " FROM " + TOP_TABLE_NAME + " WHERE " + TOP_COLUMN_ID + "=" + c.getInt(c.getColumnIndex(FAV_COLUMN_TOP_ID)) + ";", null);
+            if (d != null && d.moveToFirst()) {
+                t = new Top(d.getString(d.getColumnIndex(TOP_COLUMN_IMAGE_PATH)), d.getInt(d.getColumnIndex(TOP_COLUMN_ID)));
+                d.close();
+            } else {
+                Log.v("Cursor", "Cursor Null");
+                return null;
+            }
+            d = db.rawQuery("SELECT " + BOTTOM_COLUMN_ID + "," + BOTTOM_COLUMN_IMAGE_PATH + " FROM " + BOTTOM_TABLE_NAME + " WHERE " + BOTTOM_COLUMN_ID + "=" + c.getInt(c.getColumnIndex(FAV_COLUMN_BOTTOM_ID)) + ";", null);
+            if (d != null && d.moveToFirst()) {
+                b = new Bottom(d.getString(d.getColumnIndex(BOTTOM_COLUMN_IMAGE_PATH)), d.getInt(d.getColumnIndex(BOTTOM_COLUMN_ID)));
+                d.close();
+            }else {
+                Log.v("Cursor", "Cursor Null");
+                return null;
+            }
+            return new FavComb(t, b);
+        }
+        else {
+            Log.v("Cursor", "Cursor Null");
+            return null;
+        }
+    }
+
+    public FavComb getHistory(int position){
+        SQLiteDatabase db = this.getReadableDatabase();
+        Top t=null;
+        Bottom b=null;
+        Cursor c = db.rawQuery("SELECT " + HISTORY_COLUMN_TOP_ID + "," + HISTORY_COLUMN_BOTTOM_ID + "," + HISTORY_COLUMN_TIMESTAMP + " FROM " + HISTORY_TABLE_NAME + " ORDER BY " + HISTORY_COLUMN_ID + " LIMIT " + Integer.toString(position) + ",1;", null);
+        if( c != null && c.moveToFirst() ) {
+            Cursor d = db.rawQuery("SELECT " + TOP_COLUMN_ID + "," + TOP_COLUMN_IMAGE_PATH + " FROM " + TOP_TABLE_NAME + " WHERE " + TOP_COLUMN_ID + "=" + c.getInt(c.getColumnIndex(HISTORY_COLUMN_TOP_ID)) + ";", null);
+            if (d != null && d.moveToFirst()) {
+                t = new Top(d.getString(d.getColumnIndex(TOP_COLUMN_IMAGE_PATH)), d.getInt(d.getColumnIndex(TOP_COLUMN_ID)));
+                d.close();
+            } else {
+                Log.v("Cursor", "Cursor Null");
+                return null;
+            }
+            d = db.rawQuery("SELECT " + BOTTOM_COLUMN_ID + "," + BOTTOM_COLUMN_IMAGE_PATH + " FROM " + BOTTOM_TABLE_NAME + " WHERE " + BOTTOM_COLUMN_ID + "=" + c.getInt(c.getColumnIndex(HISTORY_COLUMN_BOTTOM_ID)) + ";", null);
+            if (d != null && d.moveToFirst()) {
+                b = new Bottom(d.getString(d.getColumnIndex(BOTTOM_COLUMN_IMAGE_PATH)), d.getInt(d.getColumnIndex(BOTTOM_COLUMN_ID)));
+                d.close();
+            }else {
+                Log.v("Cursor", "Cursor Null");
+                return null;
+            }
+            FavComb favComb = new FavComb(t, b);
+            favComb.setTimestamp(c.getString(c.getColumnIndex(HISTORY_COLUMN_TIMESTAMP)));
+            c.close();
+            return favComb;
+        }
+        else {
+            Log.v("Cursor", "Cursor Null");
+            return null;
+        }
+    }
+
     public int getTopCount(){
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery("SELECT " + TOP_COLUMN_ID + " FROM " + TOP_TABLE_NAME + ";", null);
@@ -186,6 +264,14 @@ public class AppDB extends SQLiteOpenHelper {
         return count;
     }
 
+    public int getFavCount(){
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = db.rawQuery("SELECT " + FAV_COLUMN_ID + " FROM " + FAV_TABLE_NAME + ";", null);
+        int count=c.getCount();
+        c.close();
+        return count;
+    }
+
     public long addFav(int top, int bottom){
         SQLiteDatabase db = this.getWritableDatabase();
         String q = "SELECT " + FAV_COLUMN_ID + " FROM " + FAV_TABLE_NAME + " WHERE "+ FAV_COLUMN_TOP_ID+ "=" + Integer.toString(getTop(top).getTop_pk()) + " and " + FAV_COLUMN_BOTTOM_ID + "=" + Integer.toString(getBottom(bottom).getBottom_pk()) + ";";
@@ -203,6 +289,35 @@ public class AppDB extends SQLiteOpenHelper {
 // Insert the new row, returning the primary key value of the new row
         long newRowId;
         newRowId = db.insert(FAV_TABLE_NAME, null, values);
+        db.close();
+        return newRowId;
+    }
+
+    public int getHistoryCount(){
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = db.rawQuery("SELECT " + HISTORY_COLUMN_ID + " FROM " + HISTORY_TABLE_NAME + ";", null);
+        int count=c.getCount();
+        c.close();
+        return count;
+    }
+
+    public long addHistory(int top, int bottom){
+        SQLiteDatabase db = this.getWritableDatabase();
+        String q = "SELECT " + HISTORY_COLUMN_ID + " FROM " + HISTORY_TABLE_NAME + " WHERE "+ HISTORY_COLUMN_TOP_ID+ "=" + Integer.toString(getTop(top).getTop_pk()) + " and " + HISTORY_COLUMN_BOTTOM_ID + "=" + Integer.toString(getBottom(bottom).getBottom_pk()) + ";";
+        Log.v("query", q);
+        Cursor c = db.rawQuery("SELECT " + HISTORY_COLUMN_ID + " FROM " + HISTORY_TABLE_NAME + " WHERE "+ HISTORY_COLUMN_TOP_ID+ "=" + Integer.toString(getTop(top).getTop_pk()) + " and " + HISTORY_COLUMN_BOTTOM_ID + "=" + Integer.toString(getBottom(bottom).getBottom_pk()) + ";", null);
+        int count=c.getCount();
+        c.close();
+        Log.v("count", Integer.toString(count));
+        if(count>0)
+            return 0;
+        ContentValues values = new ContentValues();
+        values.put(HISTORY_COLUMN_TOP_ID, getTop(top).getTop_pk());
+        values.put(HISTORY_COLUMN_BOTTOM_ID, getBottom(bottom).getBottom_pk());
+
+// Insert the new row, returning the primary key value of the new row
+        long newRowId;
+        newRowId = db.insert(HISTORY_TABLE_NAME, null, values);
         db.close();
         return newRowId;
     }
